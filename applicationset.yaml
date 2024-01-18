@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: helm-guestbook
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: local-dev
+            repoURL: "https://github.com/ivanmbizhev/argo-nginx.git"
+            cluster: https://kubernetes.default.svc
+            targetRevision: main
+            namespace: "default"
+            path: helm
+            valueFile: values.yaml
+  template:
+    metadata:
+      name: '{{name}}'
+      labels:
+        name: '{{name}}'
+        namespace: '{{namespace}}'
+    spec:
+      project: default
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        
+      source:
+        repoURL: '{{repoURL}}'
+        path: '{{path}}'
+        targetRevision: '{{targetRevision}}'
+        helm:
+          valueFiles:
+            - '{{valueFile}}'
+      destination:
+        server: '{{cluster}}'
+        namespace: '{{namespace}}'
